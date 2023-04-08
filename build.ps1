@@ -1,0 +1,1 @@
+Compress-Archive -LiteralPath . -DestinationPath "bot-desafio-verticore.zip" -Force
