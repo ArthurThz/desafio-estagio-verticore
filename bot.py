@@ -1,51 +1,35 @@
 
 
 import openpyxl
-# Import for the Desktop Bot
-from botcity.core import DesktopBot
-
-# Import for the Web Bot
+from send_email import sendEmail
 from botcity.web import WebBot, Browser, By
-
-# Import for integration with BotCity Maestro SDK
 from botcity.maestro import *
-
-# Disable errors if we are not connected to Maestro
 BotMaestroSDK.RAISE_NOT_CONNECTED = False
 
-def main():
-    # Runner passes the server url, the id of the task being executed,
-    # the access token and the parameters that this task receives (when applicable).
-    maestro = BotMaestroSDK.from_sys_args()
-    ## Fetch the BotExecution with details from the task, including parameters
+def main():   
+    maestro = BotMaestroSDK.from_sys_args()    
     execution = maestro.get_execution()
+    print(f"Task ID is: {execution.task_id}")
+    print(f"Task Parameters are: {execution.parameters}")
 
-    # print(f"Task ID is: {execution.task_id}")
-    # print(f"Task Parameters are: {execution.parameters}")
-
-    desktop_bot = DesktopBot()
-
-
+    #Webbot configs
     webbot = WebBot()
-
-    webbot.headless = False
-
-   
+    webbot.headless = False   
     webbot.driver_path = "chromedriver_win32/chromedriver.exe"
 
     #Criação da planilha
-
     book = openpyxl.Workbook()
-
     Page_Informacoes = book["Sheet"]
-
     Page_Informacoes.append(["Gentilico","Capital","Governador","População","IDH"])
-    book.save("dados_ibge.xlsx")
+    book.save("dados_ibge.xlsx")   
     
-    dados_coletados = []   
 
-    def getGentilico():
-        
+    #lista para armazenar os dados a serem coletados
+    dados_coletados = []  
+
+
+    #Funcoes de coleta de dados
+    def getGentilico():        
         if not webbot.find_text( "gentilico", matching=0.97, waiting_time=10000):
             not_found("gentilico")              
         webbot.triple_click_relative(1,27)
@@ -87,30 +71,29 @@ def main():
         webbot.triple_click_relative(277, 45)
         webbot.control_c()
         idh = webbot.get_clipboard()
-        dados_coletados.append(idh)
-        
-        
-        
+        dados_coletados.append(idh)          
 
-   
-    def searchData(sigla):
-        
+    
+    def searchData(sigla):        
         webbot.browse(f"https://cidades.ibge.gov.br/brasil/{sigla}/panorama")
         webbot.maximize_window()
         webbot.wait(1000)
+
         getGentilico()
         getCapital()
         getGovernador()
         getPopulacao()
         getIDH()     
-        print(dados_coletados)
+        
         Page_Informacoes.append(dados_coletados)
         book.save("dados_ibge.xlsx")
+        sendEmail()
+        
 
-
-    searchData("sp")
+    #executa o BOT, basta digitar a sigla do estados que deseja e o bot realizará a coleta dos dados.
+    searchData("ba")
            
-
+    
     # estados = ["sp","ac","pe"]  
     
     # for sigla in estados:
@@ -118,12 +101,12 @@ def main():
     #     webbot.maximize_window()
     #     searchData()
         
-     # Uncomment to mark this task as finished on BotMaestro
-    # maestro.finish_task(
-    #     task_id=execution.task_id,
-    #     status=AutomationTaskFinishStatus.SUCCESS,
-    #     message="Task Finished OK."
-    # )
+    
+    maestro.finish_task(
+        task_id=execution.task_id,
+        status=AutomationTaskFinishStatus.SUCCESS,
+        message="Task Finished OK."
+    )
 
 def not_found(label):
     print(f"Element not found: {label}")
