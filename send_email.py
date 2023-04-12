@@ -5,15 +5,7 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
-file_path = "C:/Users/lauto/OneDrive/Área de Trabalho/Projetos/desafio-verticore-estagio/bot-desafio-verticore/dados_ibge.xlsx"
-attachment = open(file_path,'rb')
 
-att = MIMEBase('application','octet-stream')
-att.set_payload(attachment.read())
-encoders.encode_base64(att)
-
-att.add_header('Content-Disposition',f'attachment; filename=dados_ibge.xls')
-attachment.close()
 
 
 
@@ -35,9 +27,22 @@ email_msg['From'] = login
 email_msg['To'] = login
 email_msg['Subject'] = "Dados colhidos com Python"
 
-email_msg.attach(MIMEText(corpo,'plain'))
-email_msg.attach(att)
+
 
 def sendEmail():
+    file_path = "dados_ibge.xlsx"
+    attachment = open(file_path,'rb')
+
+    att = MIMEBase('application','octet-stream')
+    att.set_payload(attachment.read())
+    encoders.encode_base64(att)
+
+    att.add_header('Content-Disposition',f'attachment; filename=dados_ibge.xls')
+    attachment.close()
+
+    email_msg.attach(MIMEText(corpo,'plain'))
+    email_msg.attach(att)
+
+
     server.sendmail(email_msg['From'],email_msg['To'], email_msg.as_string())
     server.quit()

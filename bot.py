@@ -21,7 +21,7 @@ def main():
     book = openpyxl.Workbook()
     Page_Informacoes = book["Sheet"]
     Page_Informacoes.append(["Gentilico","Capital","Governador","População","IDH"])
-    book.save("dados_ibge.xlsx")   
+       
     
 
     #lista para armazenar os dados a serem coletados
@@ -30,77 +30,44 @@ def main():
 
     #Funcoes de coleta de dados
     def getGentilico():        
-        if not webbot.find_text( "gentilico", matching=0.97, waiting_time=10000):
-            not_found("gentilico")              
-        webbot.triple_click_relative(1,27)
-        webbot.control_c()
-        gentilico = webbot.get_clipboard()
+        gentilico = webbot.find_element('//*[@id="dados"]/panorama-resumo/div/div[1]/div[2]/div/p',By.XPATH).text
         dados_coletados.append(gentilico)
 
     def getCapital():
-        if not webbot.find_text( "find_capital", matching=0.97, waiting_time=10000):
-            not_found("find_capital")
-        webbot.triple_click_relative(1, 20)
-        webbot.control_c()
-        capital = webbot.get_clipboard()
+        capital = webbot.find_element('//*[@id="dados"]/panorama-resumo/div/div[1]/div[3]/div/p',By.XPATH).text
         dados_coletados.append(capital)
 
     
-    def getGovernador():
-        if not webbot.find_text( "find_governador", matching=0.97, waiting_time=10000):
-           not_found("find_governador")
-        webbot.triple_click_relative(1, 20)
-        webbot.control_c()
-        governador = webbot.get_clipboard()
+    def getGovernador():       
+        governador = webbot.find_element('//*[@id="dados"]/panorama-resumo/div/div[1]/div[4]/div/p',By.XPATH).text
         dados_coletados.append(governador)       
 
-    def getPopulacao():
-       if not webbot.find_text( "find_populacao", matching=0.97, waiting_time=10000):
-           not_found("find_populacao")
-       webbot.double_click_relative(124, 109)
-       webbot.control_c()
-       populacao = webbot.get_clipboard()
+    def getPopulacao():       
+       populacao = webbot.find_element('//*[@id="dados"]/panorama-resumo/div/table/tr[2]/td[3]/valor-indicador/div/span[1]',By.XPATH).text
        dados_coletados.append(populacao)
 
     def getIDH():
-        if not webbot.find_text( "open_economia", matching=0.97, waiting_time=10000):
-            not_found("open_economia")
-        webbot.click()
-        if not webbot.find_text( "find_idh", matching=0.97, waiting_time=10000):
-            not_found("find_idh")
-        webbot.triple_click_relative(277, 45)
-        webbot.control_c()
-        idh = webbot.get_clipboard()
+        webbot.find_element('//*[@id="dados"]/panorama-resumo/div/table/tr[40]/th[2]',By.XPATH).click()
+        idh = webbot.find_element('//*[@id="dados"]/panorama-resumo/div/table/tr[41]/td[3]/valor-indicador/div/span[1]',By.XPATH).text
         dados_coletados.append(idh)          
 
     
-    def searchData(sigla):        
-        webbot.browse(f"https://cidades.ibge.gov.br/brasil/{sigla}/panorama")
-        webbot.maximize_window()
-        webbot.wait(1000)
+    def searchData():
+        estados = ["ac","al","ap","am","ba","ce","es","go","ma","mt","ms","mg","pa","pb","pr","pe","pi","rj","rn","rs","ro","rr","sc","sp","se","to","df"]
+        for sigla in estados:   
+            webbot.browse(f"https://cidades.ibge.gov.br/brasil/{sigla}/panorama")   
+            getGentilico()
+            getCapital()
+            getGovernador()
+            getPopulacao()
+            getIDH()
+            Page_Informacoes.append(dados_coletados)
+            dados_coletados.clear()
+            book.save("dados_ibge.xlsx")          
 
-        getGentilico()
-        getCapital()
-        getGovernador()
-        getPopulacao()
-        getIDH()     
-        
-        Page_Informacoes.append(dados_coletados)
-        book.save("dados_ibge.xlsx")
-        sendEmail()
-        
-
-    #executa o BOT, basta digitar a sigla do estados que deseja e o bot realizará a coleta dos dados.
-    searchData("ba")
-           
+        sendEmail() 
     
-    # estados = ["sp","ac","pe"]  
-    
-    # for sigla in estados:
-    #     webbot.browse(f"https://cidades.ibge.gov.br/brasil/{sigla}/panorama")
-    #     webbot.maximize_window()
-    #     searchData()
-        
+    searchData()    
     
     maestro.finish_task(
         task_id=execution.task_id,
